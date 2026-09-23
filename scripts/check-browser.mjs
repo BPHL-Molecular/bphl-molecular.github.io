@@ -16,6 +16,9 @@ try {
     viewport: { width: 1440, height: 900 },
     deviceScaleFactor: 1,
   })
+  await context.route('https://api.github.com/**', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }),
+  )
   const page = await context.newPage()
   const errors = [],
     warnings = []
@@ -42,13 +45,19 @@ try {
     const region = await page.locator('.scene-region').boundingBox()
     const x = region.x + region.width * 0.5,
       y = region.y + region.height * 0.5
-    assert.ok(
-      await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.tagName === 'CANVAS', {
-        x,
-        y,
-      }),
-      shape + ' receives pointer input',
+    const hit = await page.evaluate(
+      ({ x, y }) => {
+        const element = document.elementFromPoint(x, y)
+        return {
+          tag: element?.tagName,
+          className: element?.getAttribute('class'),
+          section: element?.closest('section')?.id,
+          sceneVisible: getComputedStyle(document.querySelector('.scene-shell')).visibility,
+        }
+      },
+      { x, y },
     )
+    assert.equal(hit.tag, 'CANVAS', shape + ' receives pointer input: ' + JSON.stringify(hit))
     const surface = page.locator('.scene-interaction')
     const before = Number((await surface.getAttribute('data-drag-rotation')) || 0)
     const tiltBefore = Number((await surface.getAttribute('data-drag-tilt')) || 0)
@@ -130,110 +139,73 @@ try {
   await page.waitForTimeout(500)
   const rotationAfter = Number(await page.locator('canvas').getAttribute('data-rotation-y'))
   assert.ok(Math.abs(rotationAfter - rotationBefore) > 0.02, 'Shape rotates without mouse movement')
-  const headerBefore = await page.locator('.navbar').boundingBox()
-  const headingBefore = await page.locator('#hero h1').boundingBox()
-  const sceneBefore = await page.locator('.scene-region').boundingBox()
-  result.heroPin = []
-  for (const fraction of [0.25, 0.6, 0.96, 0.98, 1.15, 0.5, 0]) {
-    await page.evaluate((f) => {
+  result.storyScroll = []
+  for (const fraction of [0.1, 0.25, 0.4]) {
+    await page.evaluate((fraction) => {
       document.documentElement.style.scrollBehavior = 'auto'
-      window.scrollTo(0, innerHeight * 1.8 * f)
+      const hero = document.getElementById('hero')
+      window.scrollTo(0, hero.getBoundingClientRect().top + scrollY + hero.offsetHeight * fraction)
     }, fraction)
-    await page.waitForTimeout(350)
+    await page.waitForTimeout(250)
     const state = await page.evaluate(() => ({
-      top: document.querySelector('#hero').getBoundingClientRect().top,
-      nextTop: document.querySelector('#pathogens').getBoundingClientRect().top,
-      morph: Number(document.querySelector('#hero').dataset.morphProgress),
-      height: innerHeight,
+      top: document.getElementById('hero').getBoundingClientRect().top,
+      morph: Number(document.getElementById('hero').dataset.morphProgress),
+      stage: Number(document.querySelector('canvas').dataset.morphStage),
     }))
-    result.heroPin.push({ fraction, ...state })
-    if (fraction > 0 && fraction < 1) {
-      assert.ok(Math.abs(state.top) < 2, 'Hero remains pinned')
-      for (const [selector, before] of [
-        ['.navbar', headerBefore],
-        ['#hero h1', headingBefore],
-        ['.scene-region', sceneBefore],
-      ]) {
-        const box = await page.locator(selector).boundingBox()
-        assert.ok(
-          Math.abs(box.y - before.y) < 2 && Math.abs(box.height - before.height) < 2,
-          selector + ' stays visually fixed through the morph',
-        )
-      }
-      assert.ok(state.nextTop >= state.height - 2, 'Next section remains outside viewport')
-    }
-    if (fraction >= 0.96) assert.equal(state.morph, 1, 'DNA complete before release')
-    if (fraction > 1) assert.ok(state.top < -30, 'Hero releases after completed DNA')
-    if (fraction === 0.98) await checkSceneDrag('DNA')
-    if (fraction === 0.6 || fraction === 0.98)
-      await page.screenshot({ path: 'artifacts/hero-morph-' + fraction + '.png' })
+    assert.ok(state.top < -20, 'Hero moves with native scrolling')
+    assert.ok(
+      Math.abs(state.morph - Math.min(1, fraction / 0.4)) < 0.04,
+      'Hero morph follows scroll position',
+    )
+    result.storyScroll.push({ fraction, ...state })
   }
+  await page.evaluate(() => window.scrollTo(0, 0))
+  await page.waitForTimeout(250)
+  await page.evaluate(() => {
+    const hero = document.getElementById('hero')
+    window.scrollTo(0, hero.getBoundingClientRect().top + scrollY + hero.offsetHeight * 0.4)
+  })
+  await page.waitForTimeout(250)
+  await checkSceneDrag('DNA')
   assert.ok(
     await page
       .locator('.navbar .wordmark img')
       .evaluate((img) => img.complete && img.naturalWidth > 0),
     'Existing SVG banner loads',
   )
-  result.chapterHolds = []
+  result.chapterMorphs = []
   for (const [index, id] of ['pathogens', 'sequencing', 'network', 'florida'].entries()) {
     await page.evaluate((id) => {
       document.documentElement.style.scrollBehavior = 'auto'
       const section = document.getElementById(id)
-      const start = Number(section.dataset.holdStart),
-        end = Number(section.dataset.holdEnd)
-      window.scrollTo(0, start + (end - start) * 0.8)
-    }, id)
-    await page.waitForTimeout(1400)
-    // Incoming morph is still progressing halfway through the pin, not already paused.
-    await page.evaluate((id) => {
-      const section = document.getElementById(id)
-      window.scrollTo({
-        top:
-          Number(section.dataset.holdStart) +
-          (Number(section.dataset.holdEnd) - Number(section.dataset.holdStart)) * 0.4,
-        behavior: 'instant',
-      })
+      window.scrollTo(0, section.getBoundingClientRect().top + scrollY + section.offsetHeight * 0.2)
     }, id)
     await page.waitForTimeout(250)
     const incoming = Number(await page.locator('canvas').getAttribute('data-morph-stage'))
     assert.ok(
-      incoming > index + 1 && incoming < index + 2,
-      id + ' spends the pin morphing before a short hold',
+      incoming > index + 1.4 && incoming < index + 1.6,
+      id + ' morphs as the section scrolls',
     )
     await page.evaluate((id) => {
       const section = document.getElementById(id)
-      window.scrollTo({
-        top:
-          Number(section.dataset.holdStart) +
-          (Number(section.dataset.holdEnd) - Number(section.dataset.holdStart)) * 0.8,
-        behavior: 'instant',
-      })
+      window.scrollTo(
+        0,
+        section.getBoundingClientRect().top + scrollY + section.offsetHeight * 0.35,
+      )
     }, id)
     await page.waitForTimeout(250)
     await page.screenshot({ path: 'artifacts/desktop-' + id + '.png' })
     await checkSceneDrag(id)
-    for (const fraction of [0.8, 0.9, 0.98]) {
-      await page.evaluate(
-        ({ id, fraction }) => {
-          const section = document.getElementById(id)
-          const start = Number(section.dataset.holdStart),
-            end = Number(section.dataset.holdEnd)
-          window.scrollTo(0, start + (end - start) * fraction)
-        },
-        { id, fraction },
-      )
-      await page.waitForTimeout(250)
-      const state = await page.evaluate(
-        (id) => ({
-          top: document.getElementById(id).getBoundingClientRect().top,
-          stage: Number(document.querySelector('canvas').dataset.morphStage),
-        }),
-        id,
-      )
-      assert.ok(Math.abs(state.top) < 2, id + ' stays pinned for reading')
-      assert.ok(Math.abs(state.stage - (index + 2)) < 0.001, id + ' holds its COMPLETE form')
-      result.chapterHolds.push({ id, fraction, ...state })
-    }
+    const state = await page.evaluate(
+      (id) => ({
+        top: document.getElementById(id).getBoundingClientRect().top,
+        stage: Number(document.querySelector('canvas').dataset.morphStage),
+      }),
+      id,
+    )
+    assert.ok(state.top < -20, id + ' scrolls naturally')
+    assert.ok(state.stage > index + 1.8, id + ' approaches the next form')
+    result.chapterMorphs.push({ id, ...state })
   }
   result.persistentCanvas = await page.evaluate(
     (canvas) => canvas === document.querySelector('canvas'),
@@ -263,6 +235,21 @@ try {
   result.mobile = {
     overflow: await page.evaluate(() => document.documentElement.scrollWidth > innerWidth),
   }
+  await page.evaluate(() => {
+    document.documentElement.style.scrollBehavior = 'auto'
+    window.scrollTo(0, document.getElementById('hero').offsetHeight * 0.2)
+  })
+  await page.waitForTimeout(250)
+  result.mobile.story = await page.evaluate(() => ({
+    top: document.getElementById('hero').getBoundingClientRect().top,
+    stage: Number(document.querySelector('canvas').dataset.morphStage),
+  }))
+  assert.ok(result.mobile.story.top < -20, 'Mobile story does not pin the page')
+  assert.ok(
+    result.mobile.story.stage > 0.4 && result.mobile.story.stage < 0.6,
+    'Mobile morph follows native scrolling',
+  )
+  await page.evaluate(() => window.scrollTo(0, 0))
   await page.getByRole('button', { name: 'Menu +' }).click()
   await page
     .getByRole('navigation', { name: 'Main navigation' })

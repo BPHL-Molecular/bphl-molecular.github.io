@@ -2,12 +2,16 @@
   position: relative;
 }
 .scene-shell {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   height: 100svh;
-  margin-bottom: -100svh;
   pointer-events: none;
   overflow: hidden;
+}
+.scene-shell:not(.is-visible) {
+  visibility: hidden;
 }
 .scene-region {
   position: absolute;

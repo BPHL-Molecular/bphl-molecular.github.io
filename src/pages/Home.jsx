@@ -20,7 +20,7 @@ export default function Home() {
   return (
     <div className={`home ${isReturningToTeam ? 'is-returning-to-team' : ''}`}>
       <div className="story" ref={story}>
-        <div className="scene-shell" aria-hidden="true">
+        <div className={`scene-shell ${inStory ? 'is-visible' : ''}`} aria-hidden="true">
           <div className="scene-region">
             <Suspense fallback={<div className="scene-loading">Preparing the molecular view</div>}>
               <BioScene progress={progress} reducedMotion={reducedMotion} />

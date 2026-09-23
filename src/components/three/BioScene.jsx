@@ -18,19 +18,24 @@ class SceneBoundary extends Component {
     return this.state.failed ? this.props.fallback : this.props.children
   }
 }
-function supportsWebGL() {
+function graphicsSupport() {
   try {
     const canvas = document.createElement('canvas')
     const context = canvas.getContext('webgl2')
-    const available = !!context
+    if (!context) return { available: false, software: false }
+    const rendererInfo = context.getExtension('WEBGL_debug_renderer_info')
+    const renderer = rendererInfo
+      ? context.getParameter(rendererInfo.UNMASKED_RENDERER_WEBGL)
+      : context.getParameter(context.RENDERER)
+    const software = /swiftshader|llvmpipe|software|basic render|citrix/i.test(String(renderer))
     context?.getExtension('WEBGL_lose_context')?.loseContext()
-    return available
+    return { available: true, software }
   } catch {
-    return false
+    return { available: false, software: false }
   }
 }
 export default function BioScene({ progress, reducedMotion }) {
-  const [webgl] = useState(supportsWebGL)
+  const [graphics] = useState(graphicsSupport)
   const [compact, setCompact] = useState(() => matchMedia('(max-width: 700px)').matches)
   const [visible, setVisible] = useState(true)
   const container = useRef(null)
@@ -108,12 +113,12 @@ export default function BioScene({ progress, reducedMotion }) {
         event.currentTarget.dataset.dragging = 'false'
       }}
     >
-      {webgl ? (
+      {graphics.available ? (
         <SceneBoundary fallback={fallback}>
           <Canvas
-            dpr={[1, compact ? 1.3 : VISUAL_CONFIG.maxPixelRatio]}
+            dpr={compact || graphics.software ? 1 : [1, VISUAL_CONFIG.maxPixelRatio]}
             camera={{ position: [0, 0, 10], fov: 42, near: 0.1, far: 50 }}
-            gl={{ antialias: false, alpha: true, powerPreference: 'low-power' }}
+            gl={{ antialias: false, alpha: true, powerPreference: 'high-performance' }}
             frameloop={visible ? 'always' : 'never'}
             fallback={fallback}
             onCreated={({ gl }) => gl.setClearColor('#f2f4f3', 0)}
@@ -123,7 +128,7 @@ export default function BioScene({ progress, reducedMotion }) {
             <Suspense fallback={null}>
               <MorphParticles
                 count={
-                  compact || reducedMotion
+                  compact || graphics.software || reducedMotion
                     ? VISUAL_CONFIG.reducedParticleCount
                     : VISUAL_CONFIG.particleCount
                 }

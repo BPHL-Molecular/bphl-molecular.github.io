@@ -535,10 +535,6 @@
   }
 }
 
-/* Pin spacing must never intercept input intended for the scene beneath it. */
-.story > .pin-spacer {
-  pointer-events: none;
-}
 .scene-region {
   cursor: grab;
 }

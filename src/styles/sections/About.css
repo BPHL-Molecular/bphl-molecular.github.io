@@ -1,0 +1,25 @@
+.principles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 50px;
+  margin-top: 100px;
+}
+.principles > div {
+  border-top: 1px solid var(--line);
+  padding-top: 22px;
+}
+.principles span {
+  font: 10px monospace;
+  color: var(--teal);
+}
+.principles h3 {
+  font-weight: 400;
+  font-size: 21px;
+  letter-spacing: -0.04em;
+  margin: 30px 0 13px;
+}
+.principles p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+}

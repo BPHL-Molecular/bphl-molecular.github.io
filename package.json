@@ -1,0 +1,44 @@
+{
+  "name": "bphl-bioinformatics",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && node scripts/prepare-pages.mjs",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "test:browser": "node scripts/check-browser.mjs",
+    "format": "prettier --write \"src/**/*.{js,jsx,css}\" \"scripts/*.mjs\" \"tests/*.mjs\" \"*.js\" index.html README.md",
+    "test:unit": "node --test tests/*.test.mjs",
+    "format:check": "prettier --check \"src/**/*.{js,jsx,css}\" \"scripts/*.mjs\" \"tests/*.mjs\" \"*.js\" index.html README.md",
+    "test:pages": "node scripts/check-pages.mjs",
+    "test:deployment": "node scripts/check-deployment.mjs"
+  },
+  "dependencies": {
+    "@fontsource/inter": "5.3.0",
+    "@react-three/fiber": "9.7.0",
+    "gsap": "3.15.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "react-router-dom": "^7.18.4",
+    "three": "0.186.0"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "eslint": "^10.10.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.6",
+    "globals": "^17.12.0",
+    "prettier": "^3.9.6",
+    "vite": "^8.3.0"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

@@ -1,0 +1,69 @@
+# Dependencies and build output
+node_modules/
+dist/
+dist-ssr/
+coverage/
+.vite/
+.cache/
+.npm/
+*.tsbuildinfo
+
+# Local previews, browser checks, and temporary work
+artifacts/
+playwright-report/
+test-results/
+blob-report/
+scratch/
+tmp/
+temp/
+*.log
+logs/
+*.pid
+*.pid.lock
+*.tmp
+*.temp
+*.bak
+*.local
+*.local.*
+
+# Environment values and credentials
+.env
+.env.*
+!.env.example
+!.env.*.example
+.npmrc
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+credentials.*.json
+service-account*.json
+secrets/
+.secrets/
+
+# Editor and assistant settings
+.vscode/
+.idea/
+.vs/
+.codex/
+codex/
+.agents/
+.claude/
+.cursor/
+*.suo
+*.user
+*.swp
+*.swo
+*~
+
+# Local deployment metadata
+.vercel/
+.netlify/
+
+# Operating system files
+.DS_Store
+.AppleDouble
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/

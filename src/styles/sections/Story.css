@@ -1,0 +1,224 @@
+.story {
+  position: relative;
+}
+.scene-shell {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  margin-bottom: -100svh;
+  pointer-events: none;
+  overflow: hidden;
+}
+.scene-region {
+  position: absolute;
+  inset: 8% 9% 9% 35%;
+  pointer-events: auto;
+  touch-action: pan-y;
+}
+.scene-region canvas {
+  touch-action: pan-y !important;
+}
+.scene-loading {
+  position: absolute;
+  top: 50%;
+  width: 100%;
+  text-align: center;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+.scene-coordinate {
+  position: absolute;
+  left: 52%;
+  bottom: 14%;
+  font: 8px/1.8 monospace;
+  letter-spacing: 0.13em;
+  color: #737f7a;
+  display: flex;
+  flex-direction: column;
+}
+.story-section {
+  min-height: 110svh;
+  position: relative;
+  padding: 155px 5vw 140px;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+.story-section:first-of-type {
+  min-height: 100svh;
+}
+.story-section:last-of-type {
+  min-height: 110svh;
+}
+.story-copy {
+  width: 48%;
+  max-width: 650px;
+  z-index: 2;
+  pointer-events: auto;
+}
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 32px;
+  font-weight: 500;
+  color: #566c62;
+}
+#hero .eyebrow {
+  font: 15px/1.5 monospace;
+  letter-spacing: 0.19em;
+  margin-bottom: 26px;
+}
+.status-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--teal);
+}
+.story-copy h1,
+.story-copy h2 {
+  font-size: clamp(44px, 4.7vw, 80px);
+}
+.title-no-wrap {
+  white-space: nowrap;
+}
+.title-transition {
+  color: #648f89;
+}
+.story-copy > p {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--muted);
+  max-width: 290px;
+  margin-top: 30px;
+}
+.text-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 35px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid #b4c5bd;
+  font-size: 11px;
+  transition: color 0.2s;
+}
+.text-link:hover {
+  color: var(--teal);
+}
+.text-link span {
+  font-size: 17px;
+}
+.story-context {
+  position: absolute;
+  right: 8%;
+  top: 37%;
+  width: 143px;
+  color: var(--muted);
+}
+.story-context p {
+  font-size: 10px;
+  line-height: 1.8;
+  margin: 0;
+}
+.story-context-first-line {
+  font-size: 0.8em;
+  white-space: nowrap;
+}
+.context-line {
+  width: 26px;
+  height: 1px;
+  background: #9baea3;
+  margin-top: 25px;
+}
+.story-bottom {
+  position: absolute;
+  left: 5vw;
+  right: 5vw;
+  bottom: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 9px;
+  color: var(--muted);
+  pointer-events: auto;
+  letter-spacing: 0.02em;
+}
+.story-bottom > a {
+  display: flex;
+  gap: 13px;
+  align-items: center;
+}
+.scroll-circle {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #c2cdc7;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+}
+.chapter-count {
+  font-family: monospace;
+  letter-spacing: 0.15em;
+}
+.section-progress {
+  position: fixed;
+  right: 3%;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  transition: opacity 0.2s;
+}
+.section-progress.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.section-progress > a {
+  height: 48px;
+  width: 35px;
+  display: grid;
+  place-items: center;
+  font: 9px monospace;
+  color: #596a60;
+}
+.section-progress > a.active {
+  color: #15281c;
+  font-weight: bold;
+}
+.progress-track {
+  position: absolute;
+  top: 0;
+  left: -8px;
+  width: 1px;
+  height: 240px;
+  background: #d6dfd9;
+}
+.progress-track > span {
+  display: block;
+  width: 2px;
+  height: 48px;
+  background: #3c6658;
+  transition: transform 0.4s;
+}
+.pill-link {
+  margin-top: 32px;
+  display: inline-flex;
+  gap: 40px;
+  align-items: center;
+  padding: 16px 23px;
+  border-radius: 30px;
+  background: var(--ink);
+  color: white;
+  font-size: 12px;
+  transition: background 0.2s;
+}
+.pill-link:hover {
+  background: var(--teal);
+}

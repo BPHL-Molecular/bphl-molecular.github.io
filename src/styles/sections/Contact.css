@@ -1,0 +1,36 @@
+.contact {
+  background: #e1e9e3;
+}
+.contact-details {
+  margin: 35px 0 0;
+}
+.contact-details > div {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  border-top: 1px solid #c3cec5;
+  padding: 18px 0;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.contact-details dt {
+  color: var(--muted);
+}
+.contact-details dd {
+  margin: 0;
+}
+.site-notices {
+  margin-top: 70px;
+  display: flex;
+  gap: 30px;
+}
+.site-notices details {
+  font-size: 10px;
+  max-width: 450px;
+}
+.site-notices summary {
+  color: var(--muted);
+}
+.site-notices p {
+  margin-top: 15px;
+  line-height: 1.8;
+}

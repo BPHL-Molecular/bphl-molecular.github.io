@@ -1,0 +1,132 @@
+.research {
+  background: #e9eeea;
+}
+.section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 40px;
+  margin-bottom: 60px;
+}
+.section-heading > p {
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--muted);
+  max-width: 330px;
+}
+.research-list {
+  border-top: 1px solid #c9d2cb;
+}
+.research-row {
+  border-bottom: 1px solid #c9d2cb;
+}
+.research-row summary {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 50px 1fr 1fr 36px;
+  align-items: center;
+  gap: 25px;
+  padding: 29px 0;
+}
+.research-row summary::-webkit-details-marker {
+  display: none;
+}
+.research-row summary:hover h3 {
+  color: var(--teal);
+}
+.row-number {
+  font: 10px monospace;
+  color: var(--muted);
+}
+.research-row h3 {
+  font-size: 23px;
+  font-weight: 400;
+  letter-spacing: -0.045em;
+}
+.research-row summary p {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.7;
+  max-width: 310px;
+}
+.row-toggle {
+  border: 1px solid #bac8be;
+  border-radius: 50%;
+  width: 31px;
+  height: 31px;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  transition: transform 0.2s;
+}
+.research-row[open] .row-toggle {
+  transform: rotate(45deg);
+}
+.research-detail {
+  margin-left: 75px;
+  max-width: 560px;
+  font-size: 14px;
+  line-height: 1.9;
+  color: var(--muted);
+  padding-bottom: 25px;
+}
+.pipelines {
+  margin-top: 85px;
+}
+.pipelines-heading-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 30px;
+  margin-bottom: 28px;
+}
+.pipelines-heading-row h3 {
+  font-size: 21px;
+  font-weight: 400;
+  letter-spacing: -0.04em;
+}
+.pipelines-heading-row p {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.7;
+  max-width: 420px;
+  margin-top: 8px;
+}
+.pipeline-list {
+  border-top: 1px solid #c9d2cb;
+}
+.pipeline-row {
+  display: grid;
+  grid-template-columns: 200px 1fr auto;
+  align-items: center;
+  gap: 25px;
+  padding: 20px 0;
+  border-bottom: 1px solid #c9d2cb;
+  transition: background-color 0.2s;
+}
+.pipeline-row:hover {
+  background-color: #dfe7e0;
+}
+.pipeline-row h4 {
+  font: 15px/1.4 monospace;
+  font-weight: 400;
+  color: var(--ink);
+}
+.pipeline-row p {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.pipeline-link {
+  font-size: 10px;
+  color: var(--teal);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.pipelines-all {
+  margin-top: 34px;
+}

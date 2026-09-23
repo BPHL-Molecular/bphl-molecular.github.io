@@ -34,7 +34,7 @@ function graphicsSupport() {
     return { available: false, software: false }
   }
 }
-export default function BioScene({ progress, reducedMotion }) {
+export default function BioScene({ progress, reducedMotion, lightweight = false }) {
   const [graphics] = useState(graphicsSupport)
   const [compact, setCompact] = useState(() => matchMedia('(max-width: 700px)').matches)
   const [visible, setVisible] = useState(true)
@@ -116,7 +116,7 @@ export default function BioScene({ progress, reducedMotion }) {
       {graphics.available ? (
         <SceneBoundary fallback={fallback}>
           <Canvas
-            dpr={compact || graphics.software ? 1 : [1, VISUAL_CONFIG.maxPixelRatio]}
+            dpr={compact || graphics.software || lightweight ? 1 : [1, VISUAL_CONFIG.maxPixelRatio]}
             camera={{ position: [0, 0, 10], fov: 42, near: 0.1, far: 50 }}
             gl={{ antialias: false, alpha: true, powerPreference: 'high-performance' }}
             frameloop={visible ? 'always' : 'never'}
@@ -128,7 +128,7 @@ export default function BioScene({ progress, reducedMotion }) {
             <Suspense fallback={null}>
               <MorphParticles
                 count={
-                  compact || graphics.software || reducedMotion
+                  compact || graphics.software || reducedMotion || lightweight
                     ? VISUAL_CONFIG.reducedParticleCount
                     : VISUAL_CONFIG.particleCount
                 }

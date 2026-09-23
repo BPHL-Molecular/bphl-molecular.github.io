@@ -99,7 +99,7 @@ const chapters = [
     bottom: 'For Florida’s laboratories and the communities we serve.',
   },
 ]
-export default function StorySections() {
+export default function StorySections({ reducedMotion, systemMotionPaused, onToggleMotion }) {
   return chapters.map((chapter, index) => (
     <section
       className={`story-section chapter-${index}`}
@@ -132,6 +132,14 @@ export default function StorySections() {
           <a className="pill-link" href="#research">
             Explore Our Work <span aria-hidden="true">↗</span>
           </a>
+        )}
+        {index === 0 && (
+          <div className="motion-preference">
+            <button type="button" onClick={onToggleMotion}>
+              {reducedMotion ? 'Play animation' : 'Pause animation'}
+            </button>
+            {systemMotionPaused && <span>Paused by your device’s motion setting.</span>}
+          </div>
         )}
       </div>
       <aside className="story-context" aria-hidden="true">

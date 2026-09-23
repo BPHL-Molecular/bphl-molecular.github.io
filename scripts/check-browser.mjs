@@ -280,6 +280,34 @@ try {
   await page.waitForTimeout(250)
   const still2 = await page.locator('canvas').screenshot()
   result.reducedMotion.stableFrames = still1.equals(still2)
+  await page.getByRole('button', { name: 'Play animation', exact: true }).click()
+  await page.waitForTimeout(300)
+  const resumedRotation = Number(await page.locator('canvas').getAttribute('data-rotation-y'))
+  await page.waitForTimeout(500)
+  assert.ok(
+    Math.abs(
+      Number(await page.locator('canvas').getAttribute('data-rotation-y')) - resumedRotation,
+    ) > 0.02,
+    'Explicit playback resumes rotation when the device requests reduced motion',
+  )
+  await page.evaluate(() => {
+    const hero = document.getElementById('hero')
+    window.scrollTo({ top: hero.offsetHeight * 0.2, behavior: 'instant' })
+  })
+  await page.waitForTimeout(250)
+  const resumedStage = Number(await page.locator('canvas').getAttribute('data-morph-stage'))
+  assert.ok(
+    resumedStage > 0.4 && resumedStage < 0.6,
+    'Explicit playback restores continuous morphing',
+  )
+  await page.reload({ waitUntil: 'networkidle' })
+  await page.getByRole('button', { name: 'Pause animation', exact: true }).click()
+  await page.waitForTimeout(300)
+  assert.equal(
+    Number(await page.locator('canvas').getAttribute('data-rotation-y')),
+    0,
+    'Animation can be paused again',
+  )
   result.tablets = []
   for (const width of [768, 1024]) {
     await page.setViewportSize({ width, height: 900 })

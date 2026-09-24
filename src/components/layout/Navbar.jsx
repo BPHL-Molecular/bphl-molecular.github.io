@@ -11,7 +11,7 @@ export default function Navbar() {
   useEffect(() => {
     const scroll = () => {
       const hero = document.getElementById('hero')
-      setScrolled(hero ? hero.getBoundingClientRect().bottom <= 0 : true)
+      setScrolled(!hero || window.scrollY > 24)
     }
 
     scroll()

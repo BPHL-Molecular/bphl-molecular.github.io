@@ -47,6 +47,7 @@ export default function Home() {
           <div className="scene-region">
             <Suspense fallback={<div className="scene-loading">Preparing the molecular view</div>}>
               <BioScene
+                active={inStory}
                 progress={progress}
                 reducedMotion={reducedMotion}
                 lightweight={systemReducedMotion}

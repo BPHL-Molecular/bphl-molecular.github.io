@@ -18,7 +18,6 @@ import { VISUAL_CONFIG } from '../../config/visual'
 
 const vertexShader = `
 attribute vec3 aBlob;
-attribute vec3 aBacterium;
 attribute vec3 aLoadedPathogen;
 attribute vec3 aSequence;
 attribute vec3 aNetwork;
@@ -28,7 +27,6 @@ uniform float uStage;
 uniform float uTime;
 uniform float uSize;
 uniform float uPixelRatio;
-uniform float uPathogenReady;
 uniform float uFloridaReady;
 varying float vDepth;
 varying float vSeed;
@@ -40,7 +38,7 @@ void main() {
   float local = fract(uStage);
   // Steady travel with soft edges; avoid compressing movement into the middle.
   float blend = mix(local, smoothstep(0.0,1.0,local), .35);
-  vec3 pathogen = mix(aBacterium, aLoadedPathogen, uPathogenReady);
+  vec3 pathogen = aLoadedPathogen;
   vec3 florida = mix(aBlob, aFlorida, uFloridaReady);
   vec3 p;
   if (uStage < 1.0) p = mix(aBlob, position, blend);
@@ -65,6 +63,7 @@ void main() {
   vSeed = aSeed;
 }`
 const fragmentShader = `
+uniform float uOpacity;
 varying vec3 vSurface;
 varying float vDepth;
 varying float vSeed;
@@ -104,7 +103,7 @@ void main() {
   color = mix(color,readColor*light,vSequence);
   alpha = mix(alpha,1.0-smoothstep(.38,.5,r),vSequence);
   if(alpha < .15) discard;
-  gl_FragColor = vec4(color,alpha);
+  gl_FragColor = vec4(color,alpha * uOpacity);
 }`
 
 function stageAt(progress) {
@@ -134,8 +133,7 @@ export default function MorphParticles({
     const blob = generateBlob(count)
     geometry.setAttribute('position', new BufferAttribute(generateDNA(count), 3))
     geometry.setAttribute('aBlob', new BufferAttribute(blob, 3))
-    geometry.setAttribute('aBacterium', new BufferAttribute(generateBlob(count, true), 3))
-    geometry.setAttribute('aLoadedPathogen', new BufferAttribute(generateBlob(count, true), 3))
+    geometry.setAttribute('aLoadedPathogen', new BufferAttribute(new Float32Array(count * 3), 3))
     geometry.setAttribute('aSequence', new BufferAttribute(generateSequencing(count), 3))
     geometry.setAttribute('aNetwork', new BufferAttribute(network.points, 3))
     geometry.setAttribute('aFlorida', new BufferAttribute(blob.slice(), 3))
@@ -156,7 +154,7 @@ export default function MorphParticles({
         uTime: { value: 0 },
         uSize: { value: VISUAL_CONFIG.pointSize },
         uPixelRatio: { value: 1 },
-        uPathogenReady: { value: 0 },
+        uOpacity: { value: 1 },
         uFloridaReady: { value: 0 },
       },
     })
@@ -187,19 +185,15 @@ export default function MorphParticles({
       .catch((error) => {
         if (!cancelled) console.warn('BPHL: Florida asset fallback:', error.message)
       })
-    // Let the first frame render before loading the pathogen points.
-    const timer = setTimeout(() => {
-      loadPointCloud('points', pathogenAsset(count), count)
-        .then((points) => {
-          update('aLoadedPathogen', points, 'bacterium')
-        })
-        .catch((error) => {
-          if (!cancelled) console.warn('BPHL: Pathogen points fallback:', error.message)
-        })
-    }, 1200)
+    loadPointCloud('points', pathogenAsset(count), count)
+      .then((points) => {
+        update('aLoadedPathogen', points, 'bacterium')
+      })
+      .catch((error) => {
+        if (!cancelled) console.warn('BPHL: Pathogen points unavailable:', error.message)
+      })
     return () => {
       cancelled = true
-      clearTimeout(timer)
       scene.geometry.dispose()
       scene.material.dispose()
       scene.lineGeometry.dispose()
@@ -221,10 +215,17 @@ export default function MorphParticles({
       labels.current.opacity = MathUtils.smoothstep(1 - Math.abs(stage - 3), 0.8, 1)
     const dt = Math.min(delta, 0.05)
     const uniforms = cloud.current.material.uniforms
-    for (const [name, ready] of [
-      ['uPathogenReady', loaded.current.bacterium],
-      ['uFloridaReady', loaded.current.florida],
-    ]) {
+    // Never draw an invented shape while the saved pathogen points are pending.
+    const waitingForPathogen = stage > 1 && stage < 3 && !loaded.current.bacterium
+    cloud.current.visible = !waitingForPathogen
+    uniforms.uOpacity.value = waitingForPathogen
+      ? 0
+      : reducedMotion
+        ? 1
+        : MathUtils.damp(uniforms.uOpacity.value, 1, 8, dt)
+    state.gl.domElement.dataset.pathogenReady = String(loaded.current.bacterium)
+    state.gl.domElement.dataset.particlesVisible = String(cloud.current.visible)
+    for (const [name, ready] of [['uFloridaReady', loaded.current.florida]]) {
       uniforms[name].value = reducedMotion
         ? Number(ready)
         : MathUtils.damp(uniforms[name].value, Number(ready), 5, dt)

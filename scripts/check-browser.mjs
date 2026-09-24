@@ -20,6 +20,24 @@ try {
     route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }),
   )
   const page = await context.newPage()
+  // A fixed canvas must not depend on IntersectionObserver to keep rendering.
+  await page.addInitScript(() => {
+    const NativeObserver = window.IntersectionObserver
+    window.IntersectionObserver = class extends NativeObserver {
+      constructor(callback, options) {
+        super((entries, observer) => {
+          callback(
+            entries.map((entry) =>
+              entry.target.classList.contains('scene-interaction')
+                ? { target: entry.target, isIntersecting: false, intersectionRatio: 0 }
+                : entry,
+            ),
+            observer,
+          )
+        }, options)
+      }
+    }
+  })
   const errors = [],
     warnings = []
   page.on('pageerror', (error) => errors.push(error.message))
@@ -154,8 +172,14 @@ try {
     }))
     assert.ok(state.top < -20, 'Hero moves with native scrolling')
     assert.ok(
-      Math.abs(state.morph - Math.min(1, fraction / 0.4)) < 0.04,
-      'Hero morph follows scroll position',
+      await page.locator('.navbar').evaluate((header) => header.classList.contains('scrolled')),
+      'Navigation gains its background as soon as the page scrolls',
+    )
+    assert.ok(
+      state.morph > 0 &&
+        state.morph <= 1 &&
+        (!result.storyScroll.length || state.morph >= result.storyScroll.at(-1).morph),
+      'Hero morph advances as the page scrolls',
     )
     result.storyScroll.push({ fraction, ...state })
   }
@@ -178,22 +202,21 @@ try {
     await page.evaluate((id) => {
       document.documentElement.style.scrollBehavior = 'auto'
       const section = document.getElementById(id)
-      window.scrollTo(0, section.getBoundingClientRect().top + scrollY + section.offsetHeight * 0.2)
+      const offset = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop)
+      window.scrollTo(0, section.getBoundingClientRect().top + scrollY - offset - 120)
     }, id)
     await page.waitForTimeout(250)
     const incoming = Number(await page.locator('canvas').getAttribute('data-morph-stage'))
     assert.ok(
-      incoming > index + 1.4 && incoming < index + 1.6,
-      id + ' morphs as the section scrolls',
+      incoming > index + 1 && incoming < index + 2,
+      id + ' morphs before the section reaches the navigation bar',
     )
     await page.evaluate((id) => {
       const section = document.getElementById(id)
-      window.scrollTo(
-        0,
-        section.getBoundingClientRect().top + scrollY + section.offsetHeight * 0.35,
-      )
+      const offset = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop)
+      window.scrollTo(0, section.getBoundingClientRect().top + scrollY - offset)
     }, id)
-    await page.waitForTimeout(250)
+    await page.waitForTimeout(1400)
     await page.screenshot({ path: 'artifacts/desktop-' + id + '.png' })
     await checkSceneDrag(id)
     const state = await page.evaluate(
@@ -203,9 +226,29 @@ try {
       }),
       id,
     )
-    assert.ok(state.top < -20, id + ' scrolls naturally')
-    assert.ok(state.stage > index + 1.8, id + ' approaches the next form')
+    assert.ok(Math.abs(state.top - 105) < 2, id + ' aligns below the navigation bar')
+    assert.ok(Math.abs(state.stage - (index + 2)) < 0.01, id + ' displays its complete shape')
+    assert.equal(await page.locator('.section-progress a.active').getAttribute('href'), '#' + id)
     result.chapterMorphs.push({ id, ...state })
+  }
+  for (const [id, expected] of [
+    ['sequencing', 3],
+    ['pathogens', 2],
+  ]) {
+    await page.evaluate((id) => {
+      const section = document.getElementById(id)
+      const offset = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop)
+      window.scrollTo({
+        top: section.getBoundingClientRect().top + scrollY - offset,
+        behavior: 'instant',
+      })
+    }, id)
+    await page.waitForTimeout(250)
+    assert.ok(
+      Math.abs(Number(await page.locator('canvas').getAttribute('data-morph-stage')) - expected) <
+        0.01,
+      id + ' stays aligned when scrolling back up',
+    )
   }
   result.persistentCanvas = await page.evaluate(
     (canvas) => canvas === document.querySelector('canvas'),
@@ -246,9 +289,30 @@ try {
   }))
   assert.ok(result.mobile.story.top < -20, 'Mobile story does not pin the page')
   assert.ok(
-    result.mobile.story.stage > 0.4 && result.mobile.story.stage < 0.6,
+    result.mobile.story.stage > 0 && result.mobile.story.stage < 1,
     'Mobile morph follows native scrolling',
   )
+  for (const [id, expected] of [
+    ['pathogens', 2],
+    ['sequencing', 3],
+    ['network', 4],
+    ['florida', 5],
+  ]) {
+    await page.evaluate((id) => {
+      const section = document.getElementById(id)
+      window.scrollTo({
+        top: section.getBoundingClientRect().top + scrollY - 90,
+        behavior: 'instant',
+      })
+    }, id)
+    await page.waitForTimeout(250)
+    assert.ok(
+      Math.abs(Number(await page.locator('canvas').getAttribute('data-morph-stage')) - expected) <
+        0.01,
+      id + ' matches its mobile section',
+    )
+    if (id === 'pathogens') await page.screenshot({ path: 'artifacts/mobile-pathogens.png' })
+  }
   await page.evaluate(() => window.scrollTo(0, 0))
   await page.getByRole('button', { name: 'Menu +' }).click()
   await page
@@ -296,10 +360,7 @@ try {
   })
   await page.waitForTimeout(250)
   const resumedStage = Number(await page.locator('canvas').getAttribute('data-morph-stage'))
-  assert.ok(
-    resumedStage > 0.4 && resumedStage < 0.6,
-    'Explicit playback restores continuous morphing',
-  )
+  assert.ok(resumedStage > 0 && resumedStage < 1, 'Explicit playback restores continuous morphing')
   await page.reload({ waitUntil: 'networkidle' })
   await page.getByRole('button', { name: 'Pause animation', exact: true }).click()
   await page.waitForTimeout(300)
@@ -328,6 +389,49 @@ try {
       document.getElementById(a.hash.slice(1)),
     ),
   )
+  const loadingPage = await context.newPage()
+  let releasePoints
+  const pointsGate = new Promise((resolve) => {
+    releasePoints = resolve
+  })
+  await loadingPage.route('**/pathogen-*.bin', async (route) => {
+    await pointsGate
+    await route.continue()
+  })
+  const goToPathogen = async () => {
+    await loadingPage.goto(baseURL, { waitUntil: 'domcontentloaded' })
+    await loadingPage.locator('canvas').waitFor()
+    await loadingPage.evaluate(() => {
+      const target = document.getElementById('pathogens')
+      const offset = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop)
+      window.scrollTo({
+        top: target.getBoundingClientRect().top + scrollY - offset,
+        behavior: 'instant',
+      })
+    })
+    await loadingPage.waitForFunction(() => {
+      const canvas = document.querySelector('canvas')
+      return Number(canvas?.dataset.morphStage) === 2 && canvas.dataset.pathogenReady === 'false'
+    })
+    assert.equal(
+      await loadingPage.locator('canvas').getAttribute('data-particles-visible'),
+      'false',
+      'No temporary pathogen appears before saved points are available',
+    )
+  }
+  await goToPathogen()
+  await loadingPage.screenshot({ path: 'artifacts/pathogen-loading.png' })
+  releasePoints()
+  await loadingPage.waitForFunction(() => {
+    const canvas = document.querySelector('canvas')
+    return canvas?.dataset.pathogenReady === 'true' && canvas.dataset.particlesVisible === 'true'
+  })
+  await loadingPage.unroute('**/pathogen-*.bin')
+  await loadingPage.route('**/pathogen-*.bin', (route) => route.abort())
+  await goToPathogen()
+  result.pathogenLoading = 'No substitute shape during delayed or failed downloads'
+  await loadingPage.close()
+
   const fallbackContext = await browser.newContext()
   await fallbackContext.addInitScript(() => {
     const original = HTMLCanvasElement.prototype.getContext

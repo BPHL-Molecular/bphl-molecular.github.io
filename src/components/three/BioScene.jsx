@@ -34,10 +34,9 @@ function graphicsSupport() {
     return { available: false, software: false }
   }
 }
-export default function BioScene({ progress, reducedMotion, lightweight = false }) {
+export default function BioScene({ progress, reducedMotion, lightweight = false, active = true }) {
   const [graphics] = useState(graphicsSupport)
   const [compact, setCompact] = useState(() => matchMedia('(max-width: 700px)').matches)
-  const [visible, setVisible] = useState(true)
   const container = useRef(null)
   const interaction = useRef({ drag: 0, dragging: false, lastX: 0, readable: 0 })
   // Owns the interaction ref's writes so MorphParticles (which only receives it as a
@@ -58,11 +57,8 @@ export default function BioScene({ progress, reducedMotion, lightweight = false 
   useEffect(() => {
     const media = matchMedia('(max-width: 700px)')
     const change = () => setCompact(media.matches)
-    const observer = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting))
-    observer.observe(container.current)
     media.addEventListener('change', change)
     return () => {
-      observer.disconnect()
       media.removeEventListener('change', change)
     }
   }, [])
@@ -119,7 +115,7 @@ export default function BioScene({ progress, reducedMotion, lightweight = false 
             dpr={compact || graphics.software || lightweight ? 1 : [1, VISUAL_CONFIG.maxPixelRatio]}
             camera={{ position: [0, 0, 10], fov: 42, near: 0.1, far: 50 }}
             gl={{ antialias: false, alpha: true, powerPreference: 'high-performance' }}
-            frameloop={visible ? 'always' : 'never'}
+            frameloop={active ? 'always' : 'never'}
             fallback={fallback}
             onCreated={({ gl }) => gl.setClearColor('#f2f4f3', 0)}
           >

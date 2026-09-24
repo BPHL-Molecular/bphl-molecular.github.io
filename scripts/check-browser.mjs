@@ -361,6 +361,21 @@ try {
   await page.waitForTimeout(250)
   const resumedStage = Number(await page.locator('canvas').getAttribute('data-morph-stage'))
   assert.ok(resumedStage > 0 && resumedStage < 1, 'Explicit playback restores continuous morphing')
+  // A future browser session keeps local storage, but has no session storage.
+  const returningContext = await browser.newContext({
+    storageState: await context.storageState(),
+    reducedMotion: 'reduce',
+  })
+  await returningContext.route('https://api.github.com/**', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }),
+  )
+  const returningPage = await returningContext.newPage()
+  await returningPage.goto(baseURL, { waitUntil: 'networkidle' })
+  await returningPage.getByRole('button', { name: 'Pause animation', exact: true }).waitFor()
+  await returningPage.getByRole('button', { name: 'Pause animation', exact: true }).click()
+  await returningPage.reload({ waitUntil: 'networkidle' })
+  await returningPage.getByRole('button', { name: 'Play animation', exact: true }).waitFor()
+  await returningContext.close()
   await page.reload({ waitUntil: 'networkidle' })
   await page.getByRole('button', { name: 'Pause animation', exact: true }).click()
   await page.waitForTimeout(300)

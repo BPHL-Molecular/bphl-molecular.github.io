@@ -14,7 +14,7 @@ const motionKey = 'bphl-scene-motion'
 
 function savedMotionPreference() {
   try {
-    const saved = sessionStorage.getItem(motionKey)
+    const saved = localStorage.getItem(motionKey)
     return saved === 'play' || saved === 'pause' ? saved : null
   } catch {
     return null
@@ -34,7 +34,7 @@ export default function Home() {
     const next = reducedMotion ? 'play' : 'pause'
     setMotionPreference(next)
     try {
-      sessionStorage.setItem(motionKey, next)
+      localStorage.setItem(motionKey, next)
     } catch {
       // The control still works when browser storage is unavailable.
     }

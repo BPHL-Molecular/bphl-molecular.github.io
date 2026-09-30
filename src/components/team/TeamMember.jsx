@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon'
 import { useState } from 'react'
 
 export default function TeamMember({ member, index }) {
@@ -28,7 +29,7 @@ export default function TeamMember({ member, index }) {
             <span className="member-name">
               {member.name}
               <span className="member-profile-arrow" aria-hidden="true">
-                →
+                <Icon name="arrow-right" />
               </span>
             </span>
             <span className="member-role">{member.role}</span>
@@ -40,7 +41,7 @@ export default function TeamMember({ member, index }) {
             <span className="member-role">{member.role}</span>
             <span className="member-description">{member.description}</span>
             <span className="team-card-action team-card-return">
-              Return to portrait <span aria-hidden="true">↙</span>
+              Return to portrait <Icon name="arrow-down-left" />
             </span>
           </span>
         </span>

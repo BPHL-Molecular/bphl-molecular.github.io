@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node scripts/prepare-pages.mjs",
+    "build": "vite build && node scripts/prepare-pages.mjs && node scripts/audit-release.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "test:browser": "node scripts/check-browser.mjs",
@@ -13,11 +13,15 @@
     "test:unit": "node --test tests/*.test.mjs",
     "format:check": "prettier --check \"src/**/*.{js,jsx,css}\" \"scripts/*.mjs\" \"tests/*.mjs\" \"*.js\" index.html README.md",
     "test:pages": "node scripts/check-pages.mjs",
+    "test:refresh": "node scripts/check-refresh.mjs",
+    "test:mobile": "node scripts/check-mobile.mjs",
+    "test:menu": "node scripts/check-menu-focus.mjs",
     "test:deployment": "node scripts/check-deployment.mjs"
   },
   "dependencies": {
     "@fontsource/inter": "5.3.0",
     "@react-three/fiber": "9.7.0",
+    "lucide-react": "^1.49.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-router-dom": "^7.18.4",

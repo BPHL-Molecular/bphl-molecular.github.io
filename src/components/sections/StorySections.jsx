@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon'
 import { Link } from 'react-router-dom'
 import { heroTags } from '../../data/homeContent'
 
@@ -121,7 +122,7 @@ export default function StorySections({ reducedMotion, systemMotionPaused, onTog
         {index === 0 && (
           <div className="hero-actions">
             <a className="hero-primary" href="#research">
-              Our Work <span aria-hidden="true">↗</span>
+              Our Work <Icon name="arrow-up-right" />
             </a>
             <a className="hero-secondary" href="#about">
               Learn more
@@ -130,12 +131,13 @@ export default function StorySections({ reducedMotion, systemMotionPaused, onTog
         )}
         {index === 4 && (
           <a className="pill-link" href="#research">
-            Explore Our Work <span aria-hidden="true">↗</span>
+            Explore Our Work <Icon name="arrow-up-right" />
           </a>
         )}
         {index === 0 && (
           <div className="motion-preference">
             <button type="button" onClick={onToggleMotion}>
+              <Icon name={reducedMotion ? 'play' : 'pause'} />{' '}
               {reducedMotion ? 'Play animation' : 'Pause animation'}
             </button>
             {systemMotionPaused && <span>Paused by your device’s motion setting.</span>}
@@ -164,7 +166,9 @@ export default function StorySections({ reducedMotion, systemMotionPaused, onTog
       )}
       <div className="story-bottom">
         <a href={index < 4 ? `#${chapters[index + 1].id}` : '#about'}>
-          <span className="scroll-circle">↓</span>
+          <span className="scroll-circle">
+            <Icon name="arrow-down" />
+          </span>
           {index === 0 ? 'Scroll to explore' : 'Continue the story'}
         </a>
         {chapter.bottom && <span>{chapter.bottom}</span>}

@@ -406,8 +406,8 @@
   letter-spacing: 0.08em;
 }
 .section-progress {
-  right: 5%;
-  top: 59%;
+  right: max(12px, 1.5vw);
+  top: 50%;
 }
 .hero-metadata {
   position: absolute;
@@ -440,6 +440,21 @@
 }
 #hero .story-bottom {
   bottom: 22px;
+}
+/* Reserve a separate lane for the fixed chapter rail, including while scrolling. */
+@media (min-width: 701px) {
+  .story-section,
+  #hero {
+    padding-right: max(88px, 5.35vw);
+  }
+  .story-bottom,
+  .hero-metadata {
+    right: max(88px, 5.35vw);
+  }
+  .story-context,
+  #hero .story-context {
+    right: max(88px, 8vw);
+  }
 }
 @media (max-width: 1100px) {
   .navbar .wordmark img {

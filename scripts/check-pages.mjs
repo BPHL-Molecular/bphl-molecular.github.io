@@ -86,6 +86,51 @@ try {
     [],
   )
   await page.goto(baseURL, { waitUntil: 'networkidle' })
+  for (const width of [701, 768, 1024, 1280, 1440, 1920]) {
+    await page.setViewportSize({ width, height: 720 })
+    if (width <= 1100) {
+      assert.equal(await page.locator('.section-progress').isVisible(), false)
+      continue
+    }
+    const overlaps = await page.evaluate(() => {
+      const railLeft = document.querySelector('.progress-track').getBoundingClientRect().left
+      return [
+        ...document.querySelectorAll('.story-copy, .story-context, .story-bottom, .hero-metadata'),
+      ]
+        .filter((element) => getComputedStyle(element).display !== 'none')
+        .filter((element) => element.getBoundingClientRect().right > railLeft - 12)
+        .map((element) => `${element.closest('section').id}: ${element.className}`)
+    })
+    assert.deepEqual(overlaps, [], `Chapter rail has a clear content lane at ${width}px`)
+  }
+  await page.setViewportSize({ width: 375, height: 812 })
+  assert.equal(await page.locator('.section-progress').isVisible(), false)
+  await page.setViewportSize({ width: 1280, height: 900 })
+  const exploreResearch = page.getByRole('link', { name: 'Explore Research' })
+  for (const keyboard of [false, true]) {
+    if (keyboard) {
+      await exploreResearch.focus()
+      await exploreResearch.press('Enter')
+    } else {
+      await exploreResearch.click()
+    }
+    await page.waitForFunction(
+      () => document.activeElement === document.querySelector('#research h2'),
+    )
+    assert.equal(
+      await page
+        .locator('#research h2')
+        .evaluate((heading) => getComputedStyle(heading).outlineStyle),
+      'none',
+      'Research destination has no decorative focus box',
+    )
+    await page.keyboard.press('Tab')
+    assert.equal(
+      await page.evaluate(() => getComputedStyle(document.activeElement).outlineStyle),
+      'solid',
+      'The next keyboard control retains its focus indicator',
+    )
+  }
   assert.match(
     await page.locator('#team-title').innerText(),
     /Shared knowledge\.\s*New possibilities\./,

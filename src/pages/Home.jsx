@@ -1,3 +1,4 @@
+import Icon from '../components/ui/Icon'
 import { lazy, Suspense, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import StorySections from '../components/sections/StorySections'
@@ -9,6 +10,7 @@ import Contact from '../components/sections/Contact'
 import SectionProgress from '../components/layout/SectionProgress'
 import useReducedMotion from '../hooks/useReducedMotion'
 import useScrollMorph from '../hooks/useScrollMorph'
+import useSceneActivity from '../hooks/useSceneActivity'
 const BioScene = lazy(() => import('../components/three/BioScene'))
 const motionKey = 'bphl-scene-motion'
 
@@ -23,6 +25,8 @@ function savedMotionPreference() {
 
 export default function Home() {
   const story = useRef(null)
+  const sceneRegion = useRef(null)
+  const sceneActive = useSceneActivity(sceneRegion)
   const location = useLocation()
   const systemReducedMotion = useReducedMotion()
   const [motionPreference, setMotionPreference] = useState(savedMotionPreference)
@@ -43,26 +47,36 @@ export default function Home() {
   return (
     <div className={`home ${isReturningToTeam ? 'is-returning-to-team' : ''}`}>
       <div className="story" ref={story}>
-        <div className={`scene-shell ${inStory ? 'is-visible' : ''}`} aria-hidden="true">
-          <div className="scene-region">
+        <div ref={sceneRegion} className={`scene-shell ${inStory ? 'is-visible' : ''}`}>
+          <div className="scene-region" aria-hidden="true">
             <Suspense fallback={<div className="scene-loading">Preparing the molecular view</div>}>
               <BioScene
-                active={inStory}
+                active={inStory && sceneActive}
+                chapter={active}
                 progress={progress}
                 reducedMotion={reducedMotion}
                 lightweight={systemReducedMotion}
               />
             </Suspense>
           </div>
+          <div className="scene-toolbar">
+            <span>Chapter 0{active + 1} / 05</span>
+            <button type="button" onClick={toggleMotion}>
+              <Icon name={reducedMotion ? 'play' : 'pause'} />{' '}
+              {reducedMotion ? 'Play animation' : 'Pause animation'}
+            </button>
+          </div>
           <div className="scene-coordinate">
             BPHL / GENOMIC EXPLORATIONS<span>FL — 27.6648° N, 81.5158° W</span>
           </div>
         </div>
-        <StorySections
-          reducedMotion={reducedMotion}
-          systemMotionPaused={systemReducedMotion && !motionPreference}
-          onToggleMotion={toggleMotion}
-        />
+        <div className="story-chapters">
+          <StorySections
+            reducedMotion={reducedMotion}
+            systemMotionPaused={systemReducedMotion && !motionPreference}
+            onToggleMotion={toggleMotion}
+          />
+        </div>
         <SectionProgress active={active} visible={inStory} />
       </div>
       <About />

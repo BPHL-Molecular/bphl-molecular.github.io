@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon'
 const aboutContent = {
   kicker: ['01 / ABOUT US', 'BUILT FOR PUBLIC HEALTH'],
 
@@ -41,7 +42,7 @@ export default function About() {
           <p>{copy}</p>
 
           <a href="#research" className="text-link">
-            {link} <span aria-hidden="true">↗</span>
+            {link} <Icon name="arrow-up-right" />
           </a>
         </div>
       </div>

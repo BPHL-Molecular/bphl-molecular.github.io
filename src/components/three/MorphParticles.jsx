@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import createSequenceLabels from './SequenceLabels'
 import {
   BufferAttribute,
@@ -119,93 +119,136 @@ export default function MorphParticles({
   reducedMotion,
   interaction,
   onReadableChange,
+  onAssetStatus,
+  active,
 }) {
   const group = useRef(null),
     labels = useRef(null),
     cloud = useRef(null),
     lines = useRef(null)
   const rotationPhase = useRef(0)
-  const loaded = useRef({ bacterium: false, florida: false })
-  const scene = useMemo(() => {
-    const geometry = new BufferGeometry()
-    const sequenceLabels = createSequenceLabels()
-    const network = generateNetwork(count)
-    const blob = generateBlob(count)
-    geometry.setAttribute('position', new BufferAttribute(generateDNA(count), 3))
-    geometry.setAttribute('aBlob', new BufferAttribute(blob, 3))
-    geometry.setAttribute('aLoadedPathogen', new BufferAttribute(new Float32Array(count * 3), 3))
-    geometry.setAttribute('aSequence', new BufferAttribute(generateSequencing(count), 3))
-    geometry.setAttribute('aNetwork', new BufferAttribute(network.points, 3))
-    geometry.setAttribute('aFlorida', new BufferAttribute(blob.slice(), 3))
-    geometry.setAttribute(
-      'aSeed',
-      new BufferAttribute(
-        Float32Array.from({ length: count }, (_, i) => ((i * 7919) % count) / count),
-        1,
-      ),
-    )
-    const material = new ShaderMaterial({
-      vertexShader,
-      fragmentShader,
-      transparent: true,
-      depthWrite: true,
-      uniforms: {
-        uStage: { value: 0 },
-        uTime: { value: 0 },
-        uSize: { value: VISUAL_CONFIG.pointSize },
-        uPixelRatio: { value: 1 },
-        uOpacity: { value: 1 },
-        uFloridaReady: { value: 0 },
-      },
-    })
-    const lineGeometry = new BufferGeometry().setAttribute(
-      'position',
-      new BufferAttribute(network.lines, 3),
-    )
-    const lineMaterial = new LineBasicMaterial({
-      color: '#779e94',
-      transparent: true,
-      opacity: 0,
-      depthWrite: false,
-    })
-    return { geometry, material, lineGeometry, lineMaterial, sequenceLabels }
-  }, [count])
+  const displayedStage = useRef(null)
+  const { invalidate } = useThree()
+  const animationTime = useRef(0)
+  const status = useRef('')
+  // Allocate both bounded quality tiers once; switching does not rebuild shapes while scrolling.
+  const scenes = useMemo(
+    () =>
+      [VISUAL_CONFIG.reducedParticleCount, VISUAL_CONFIG.particleCount].map((count) => {
+        const geometry = new BufferGeometry()
+        const sequenceLabels = createSequenceLabels()
+        const network = generateNetwork(count)
+        const blob = generateBlob(count)
+        geometry.setAttribute('position', new BufferAttribute(generateDNA(count), 3))
+        geometry.setAttribute('aBlob', new BufferAttribute(blob, 3))
+        geometry.setAttribute(
+          'aLoadedPathogen',
+          new BufferAttribute(new Float32Array(count * 3), 3),
+        )
+        geometry.setAttribute('aSequence', new BufferAttribute(generateSequencing(count), 3))
+        geometry.setAttribute('aNetwork', new BufferAttribute(network.points, 3))
+        geometry.setAttribute('aFlorida', new BufferAttribute(blob.slice(), 3))
+        geometry.setAttribute(
+          'aSeed',
+          new BufferAttribute(
+            Float32Array.from({ length: count }, (_, i) => ((i * 7919) % count) / count),
+            1,
+          ),
+        )
+        const material = new ShaderMaterial({
+          vertexShader,
+          fragmentShader,
+          transparent: true,
+          depthWrite: true,
+          uniforms: {
+            uStage: { value: 0 },
+            uTime: { value: 0 },
+            uSize: { value: VISUAL_CONFIG.pointSize },
+            uPixelRatio: { value: 1 },
+            uOpacity: { value: 1 },
+            uFloridaReady: { value: 0 },
+          },
+        })
+        const lineGeometry = new BufferGeometry().setAttribute(
+          'position',
+          new BufferAttribute(network.lines, 3),
+        )
+        const lineMaterial = new LineBasicMaterial({
+          color: '#779e94',
+          transparent: true,
+          opacity: 0,
+          depthWrite: false,
+        })
+        return {
+          count,
+          geometry,
+          material,
+          lineGeometry,
+          lineMaterial,
+          sequenceLabels,
+          loaded: { bacterium: false, florida: false },
+          errors: {},
+        }
+      }),
+    [],
+  )
+  const scene = scenes.find((candidate) => candidate.count === count)
   useEffect(() => {
     let cancelled = false
-    loaded.current = { bacterium: false, florida: false }
-    const update = (attribute, points, type) => {
-      if (cancelled) return
-      scene.geometry.setAttribute(attribute, new BufferAttribute(points, 3))
-      loaded.current[type] = true
+    for (const scene of scenes) {
+      const update = (attribute, points, type) => {
+        if (cancelled) return
+        const buffer = scene.geometry.getAttribute(attribute)
+        buffer.array.set(points)
+        buffer.needsUpdate = true
+        scene.loaded[type] = true
+        invalidate()
+      }
+      loadPointCloud('svg', SVG_ASSETS.florida, scene.count)
+        .then((points) => update('aFlorida', points, 'florida'))
+        .catch(() => {
+          if (!cancelled) {
+            scene.errors.florida = true
+            invalidate()
+          }
+        })
+      loadPointCloud('points', pathogenAsset(scene.count), scene.count)
+        .then((points) => update('aLoadedPathogen', points, 'bacterium'))
+        .catch(() => {
+          if (!cancelled) {
+            scene.errors.bacterium = true
+            invalidate()
+          }
+        })
     }
-    loadPointCloud('svg', SVG_ASSETS.florida, count)
-      .then((points) => {
-        update('aFlorida', points, 'florida')
-      })
-      .catch((error) => {
-        if (!cancelled) console.warn('BPHL: Florida asset fallback:', error.message)
-      })
-    loadPointCloud('points', pathogenAsset(count), count)
-      .then((points) => {
-        update('aLoadedPathogen', points, 'bacterium')
-      })
-      .catch((error) => {
-        if (!cancelled) console.warn('BPHL: Pathogen points unavailable:', error.message)
-      })
     return () => {
       cancelled = true
-      scene.geometry.dispose()
-      scene.material.dispose()
-      scene.lineGeometry.dispose()
-      scene.lineMaterial.dispose()
-      scene.sequenceLabels.texture.dispose()
+      for (const scene of scenes) {
+        scene.geometry.dispose()
+        scene.material.dispose()
+        scene.lineGeometry.dispose()
+        scene.lineMaterial.dispose()
+        scene.sequenceLabels.texture.dispose()
+      }
     }
-  }, [scene, count])
+  }, [scenes, invalidate])
   useFrame((state, delta) => {
+    if (!active || document.hidden || document.documentElement.dataset.menuOpen) return
     // The scroll controller supplies discrete complete forms for reduced motion.
-    const stage = stageAt(progress.current.value)
+    const targetStage = stageAt(progress.current.value)
+    // Let the helix form and unwind gradually, even during a quick touch scroll.
+    // Blend back to the usual response once both stages are beyond the DNA sequence.
+    const dnaProximity = Math.min(targetStage, displayedStage.current ?? targetStage)
+    const response = MathUtils.lerp(7, 24, MathUtils.smoothstep(dnaProximity, 1.9, 2.2))
+    const easedStage =
+      reducedMotion || displayedStage.current === null
+        ? targetStage
+        : MathUtils.damp(displayedStage.current, targetStage, response, Math.min(delta, 0.05))
+    const stage = Math.abs(easedStage - targetStage) < 0.002 ? targetStage : easedStage
+    displayedStage.current = stage
     state.gl.domElement.dataset.morphStage = String(stage)
-    const time = reducedMotion ? 0 : state.clock.elapsedTime
+    if (!reducedMotion) animationTime.current += Math.min(delta, 0.05)
+    const time = reducedMotion ? 0 : animationTime.current
     cloud.current.material.uniforms.uStage.value = stage
     cloud.current.material.uniforms.uTime.value = time
     cloud.current.material.uniforms.uPixelRatio.value = state.gl.getPixelRatio()
@@ -216,20 +259,33 @@ export default function MorphParticles({
     const dt = Math.min(delta, 0.05)
     const uniforms = cloud.current.material.uniforms
     // Never draw an invented shape while the saved pathogen points are pending.
-    const waitingForPathogen = stage > 1 && stage < 3 && !loaded.current.bacterium
-    cloud.current.visible = !waitingForPathogen
+    const waitingForPathogen = stage > 1 && stage < 3 && !scene.loaded.bacterium
+    const waitingForFlorida = stage > 4 && !scene.loaded.florida
+    const assetMessage = waitingForPathogen
+      ? scene.errors.bacterium
+        ? 'Saved pathogen model unavailable. The story remains available below.'
+        : 'Loading the saved pathogen model…'
+      : waitingForFlorida
+        ? scene.errors.florida
+          ? 'Map unavailable. The story remains available below.'
+          : 'Loading the Florida map…'
+        : ''
+    if (status.current !== assetMessage) {
+      status.current = assetMessage
+      onAssetStatus(assetMessage)
+    }
+    state.gl.domElement.dataset.particleCount = String(count)
+    cloud.current.visible = !waitingForPathogen && !waitingForFlorida
     uniforms.uOpacity.value = waitingForPathogen
       ? 0
       : reducedMotion
         ? 1
         : MathUtils.damp(uniforms.uOpacity.value, 1, 8, dt)
-    state.gl.domElement.dataset.pathogenReady = String(loaded.current.bacterium)
+    state.gl.domElement.dataset.pathogenReady = String(scene.loaded.bacterium)
     state.gl.domElement.dataset.particlesVisible = String(cloud.current.visible)
-    for (const [name, ready] of [['uFloridaReady', loaded.current.florida]]) {
-      uniforms[name].value = reducedMotion
-        ? Number(ready)
-        : MathUtils.damp(uniforms[name].value, Number(ready), 5, dt)
-    }
+    uniforms.uFloridaReady.value = reducedMotion
+      ? Number(scene.loaded.florida)
+      : MathUtils.damp(uniforms.uFloridaReady.value, Number(scene.loaded.florida), 5, dt)
     // Turn the organic forms continuously. Ease to a readable angle for reads and map.
     // Ramp starts as soon as the previous shape is complete (not partway into the morph)
     // so the free-spin has the whole incoming transition to bleed off before the reads

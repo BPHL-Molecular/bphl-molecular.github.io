@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon'
 import { Link } from 'react-router-dom'
 import { footerNavigation } from '../../data/navigation'
 export default function Footer() {
@@ -16,7 +17,9 @@ export default function Footer() {
       </nav>
       <div className="footer-bottom">
         <span>Science in service of public health.</span>
-        <Link to="/#hero">Back to top ↑</Link>
+        <Link to="/#hero">
+          Back to top <Icon name="arrow-up" />
+        </Link>
       </div>
     </footer>
   )

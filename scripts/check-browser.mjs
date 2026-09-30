@@ -243,7 +243,12 @@ try {
         behavior: 'instant',
       })
     }, id)
-    await page.waitForTimeout(250)
+    await page.waitForFunction(
+      (stage) =>
+        Math.abs(Number(document.querySelector('canvas')?.dataset.morphStage) - stage) < 0.01,
+      expected,
+      { timeout: 2000 },
+    )
     assert.ok(
       Math.abs(Number(await page.locator('canvas').getAttribute('data-morph-stage')) - expected) <
         0.01,
@@ -256,7 +261,7 @@ try {
   )
   await page
     .getByRole('navigation', { name: 'Main navigation' })
-    .getByRole('link', { name: 'Research', exact: true })
+    .getByRole('link', { name: 'Explore Research', exact: false })
     .click()
   await page.waitForTimeout(1000)
   await page.locator('.research-row summary').first().click()
@@ -280,7 +285,14 @@ try {
   }
   await page.evaluate(() => {
     document.documentElement.style.scrollBehavior = 'auto'
-    window.scrollTo(0, document.getElementById('hero').offsetHeight * 0.2)
+    const hero = document.getElementById('hero')
+    const next = document.getElementById('pathogens')
+    const start = hero.getBoundingClientRect().top + scrollY
+    const offset =
+      parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) +
+      parseFloat(getComputedStyle(hero).scrollMarginTop)
+    const end = next.getBoundingClientRect().top + scrollY - offset
+    window.scrollTo(0, start + (end - start) * 0.225)
   })
   await page.waitForTimeout(250)
   result.mobile.story = await page.evaluate(() => ({
@@ -301,11 +313,20 @@ try {
     await page.evaluate((id) => {
       const section = document.getElementById(id)
       window.scrollTo({
-        top: section.getBoundingClientRect().top + scrollY - 90,
+        top:
+          section.getBoundingClientRect().top +
+          scrollY -
+          parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) -
+          parseFloat(getComputedStyle(section).scrollMarginTop),
         behavior: 'instant',
       })
     }, id)
-    await page.waitForTimeout(250)
+    await page.waitForFunction(
+      (stage) =>
+        Math.abs(Number(document.querySelector('canvas')?.dataset.morphStage) - stage) < 0.01,
+      expected,
+      { timeout: 2000 },
+    )
     assert.ok(
       Math.abs(Number(await page.locator('canvas').getAttribute('data-morph-stage')) - expected) <
         0.01,
@@ -314,16 +335,20 @@ try {
     if (id === 'pathogens') await page.screenshot({ path: 'artifacts/mobile-pathogens.png' })
   }
   await page.evaluate(() => window.scrollTo(0, 0))
-  await page.getByRole('button', { name: 'Menu +' }).click()
+  await page.getByRole('button', { name: 'Menu' }).click()
   await page
     .getByRole('navigation', { name: 'Main navigation' })
     .getByRole('link', { name: 'Team', exact: true })
     .click()
   await page.waitForFunction(
-    () => Math.abs(document.getElementById('team').getBoundingClientRect().top - 90) < 5,
+    () =>
+      Math.abs(
+        document.getElementById('team').getBoundingClientRect().top -
+          parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop),
+      ) < 5,
   )
   result.mobile.menuClosed =
-    (await page.getByRole('button', { name: 'Menu +' }).getAttribute('aria-expanded')) === 'false'
+    (await page.getByRole('button', { name: 'Menu' }).getAttribute('aria-expanded')) === 'false'
   await page.screenshot({ path: 'artifacts/mobile-team.png' })
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto(baseURL, { waitUntil: 'networkidle' })
@@ -356,7 +381,16 @@ try {
   )
   await page.evaluate(() => {
     const hero = document.getElementById('hero')
-    window.scrollTo({ top: hero.offsetHeight * 0.2, behavior: 'instant' })
+    const next = document.getElementById('pathogens')
+    const start = hero.getBoundingClientRect().top + scrollY
+    const offset =
+      parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) +
+      parseFloat(getComputedStyle(hero).scrollMarginTop)
+    const end = next.getBoundingClientRect().top + scrollY - offset
+    window.scrollTo({
+      top: start + (end - start) * 0.225,
+      behavior: 'instant',
+    })
   })
   await page.waitForTimeout(250)
   const resumedStage = Number(await page.locator('canvas').getAttribute('data-morph-stage'))

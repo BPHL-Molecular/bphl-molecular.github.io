@@ -33,7 +33,9 @@ export default function RouteNavigation() {
         const target = id ? document.getElementById(id) : document.getElementById('main')
         if (!target) return
         if (target instanceof HTMLDetailsElement) target.open = true
-        const offset = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0
+        const offset =
+          (parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0) +
+          (parseFloat(getComputedStyle(target).scrollMarginTop) || 0)
         const savedHomeScroll =
           pathname === '/' && Number.isFinite(state?.restoreHomeScrollY)
             ? state.restoreHomeScrollY

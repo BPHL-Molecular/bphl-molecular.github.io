@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon'
 import { Link, useNavigate } from 'react-router-dom'
 import { team } from '../../data/team'
 
@@ -70,7 +71,7 @@ export default function Team() {
       </div>
 
       <Link className="text-link team-link" to="/team" onClick={openFullTeam}>
-        Meet the team <span aria-hidden="true">↗</span>
+        Meet the team <Icon name="arrow-up-right" />
       </Link>
     </section>
   )

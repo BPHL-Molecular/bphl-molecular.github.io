@@ -1,15 +1,42 @@
 .contact {
   background: #e1e9e3;
 }
+.contact.editorial-section {
+  padding-top: 56px;
+  padding-bottom: 32px;
+}
+.contact .section-kicker {
+  margin-bottom: 40px;
+}
+.contact .site-notices {
+  margin-top: 28px;
+}
+.contact .editorial-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 6vw;
+}
+.contact h2 {
+  font-size: clamp(36px, 4.4vw, 72px);
+}
+.contact .section-body > p {
+  max-width: none;
+  font-size: clamp(16px, 1.25vw, 18px);
+  line-height: 1.7;
+}
+.contact .section-body .lead {
+  font-size: clamp(23px, 2vw, 30px);
+  line-height: 1.45;
+}
 .contact-details {
   margin: 35px 0 0;
 }
 .contact-details > div {
   display: grid;
-  grid-template-columns: 110px 1fr;
+  grid-template-columns: 130px minmax(0, 1fr);
+  gap: 16px;
   border-top: 1px solid #c3cec5;
-  padding: 18px 0;
-  font-size: 11px;
+  padding: 22px 0;
+  font-size: clamp(14px, 1.1vw, 16px);
   line-height: 1.6;
 }
 .contact-details dt {
@@ -17,6 +44,7 @@
 }
 .contact-details dd {
   margin: 0;
+  overflow-wrap: anywhere;
 }
 .site-notices {
   margin-top: 70px;
@@ -24,7 +52,7 @@
   gap: 30px;
 }
 .site-notices details {
-  font-size: 10px;
+  font-size: 13px;
   max-width: 450px;
 }
 .site-notices summary {
@@ -33,4 +61,16 @@
 .site-notices p {
   margin-top: 15px;
   line-height: 1.8;
+}
+@media (max-width: 700px) {
+  .contact .editorial-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+  }
+  .contact .contact-details > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+    padding: 18px 0;
+    font-size: 15px;
+  }
 }

@@ -1,10 +1,12 @@
+import Icon from '../components/ui/Icon'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import useTrainingSessions from '../hooks/useTrainingSessions'
 import { TRAINING_SOURCE } from '../lib/training'
+import RefreshButton from '../components/layout/RefreshButton'
 
 export default function TrainingPage() {
-  const { sessions, error, retry } = useTrainingSessions()
+  const { sessions, error, retry, loading, lastUpdated } = useTrainingSessions()
   const [query, setQuery] = useState('')
   const filtered = useMemo(() => {
     if (!sessions) return null
@@ -21,7 +23,7 @@ export default function TrainingPage() {
       aria-labelledby="training-title"
     >
       <Link className="text-link training-back" to="/#training">
-        <span aria-hidden="true">←</span> Back to homepage training
+        <Icon name="arrow-left" /> Back to homepage training
       </Link>
       <div className="section-kicker">
         <span>Training</span>
@@ -37,13 +39,18 @@ export default function TrainingPage() {
           Slides from StaPH-B southeast-region office hours — pipeline walkthroughs, tool
           deep-dives, and skills sessions.
           <br />
-          <span className="placeholder-note">
+          <RefreshButton
+            label="Refresh training materials"
+            loading={loading}
+            lastUpdated={lastUpdated}
+            onRefresh={retry}
+          >
             Synced automatically from{' '}
             <a href={TRAINING_SOURCE} target="_blank" rel="noreferrer">
               github.com/StaPH-B/southeast-region
             </a>
             .
-          </span>
+          </RefreshButton>
         </p>
       </div>
       <div className="training-search">
@@ -70,6 +77,7 @@ export default function TrainingPage() {
           <button
             className="training-retry"
             type="button"
+            disabled={loading}
             onClick={() => {
               retry()
             }}
@@ -102,7 +110,7 @@ export default function TrainingPage() {
               </span>
               <span className="training-title">{item.title}</span>
               <span className="pipeline-link">
-                View slides <span aria-hidden="true">↗</span>
+                View slides <Icon name="arrow-up-right" />
               </span>
             </a>
           ))}

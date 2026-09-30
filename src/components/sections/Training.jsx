@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon'
 import { Link } from 'react-router-dom'
 import { trainingContent } from '../../data/homeContent'
 import useTrainingSessions from '../../hooks/useTrainingSessions'
@@ -5,7 +6,7 @@ import { TRAINING_SOURCE } from '../../lib/training'
 
 export default function Training() {
   const { sessions, error } = useTrainingSessions()
-  const recentSessions = sessions?.slice(0, 3)
+  const recentSessions = sessions?.slice(0, 6)
 
   return (
     <section
@@ -55,14 +56,14 @@ export default function Training() {
               </span>
               <span className="training-title">{item.title}</span>
               <span className="pipeline-link">
-                Open material <span aria-hidden="true">↗</span>
+                Open material <Icon name="arrow-up-right" />
               </span>
             </a>
           ))}
         </div>
       )}
       <Link className="text-link training-preview-link" to="/training">
-        View all training materials <span aria-hidden="true">↗</span>
+        View all training materials <Icon name="arrow-up-right" />
       </Link>
     </section>
   )

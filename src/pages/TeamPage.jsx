@@ -1,3 +1,4 @@
+import Icon from '../components/ui/Icon'
 import { useLocation, useNavigate } from 'react-router-dom'
 import TeamMember from '../components/team/TeamMember'
 import { team } from '../data/team'
@@ -44,7 +45,7 @@ export default function TeamPage() {
           ))}
         </div>
         <button className="text-link team-return" type="button" onClick={returnToHomepageTeam}>
-          Return to the homepage team section <span aria-hidden="true">←</span>
+          Return to the homepage team section <Icon name="arrow-left" />
         </button>
       </div>
     </section>

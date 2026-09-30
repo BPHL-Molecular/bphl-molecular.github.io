@@ -14,13 +14,19 @@ export default function useTrainingSessions() {
   const [error, setError] = useState(null)
   const [attempt, setAttempt] = useState(0)
   const hasCache = useRef(sessions !== null)
+  const [loading, setLoading] = useState(sessions === null)
+  const [lastUpdated, setLastUpdated] = useState(null)
 
   useEffect(() => {
-    if (hasCache.current) return
+    if (hasCache.current && attempt === 0) return
     const controller = new AbortController()
     const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(15000)])
 
-    fetch(TRAINING_API, { signal, headers: { Accept: 'application/vnd.github+json' } })
+    fetch(TRAINING_API, {
+      signal,
+      cache: 'no-store',
+      headers: { Accept: 'application/vnd.github+json' },
+    })
       .then((response) => {
         if (!response.ok) {
           throw new Error(
@@ -36,6 +42,10 @@ export default function useTrainingSessions() {
         const parsed = parseSessions(files)
         setSessions(parsed)
         writeTrainingCache(storage(), parsed)
+        setLastUpdated(new Date())
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false)
       })
       .catch((fetchError) => {
         if (!controller.signal.aborted) {
@@ -53,7 +63,11 @@ export default function useTrainingSessions() {
   return {
     sessions,
     error,
+    loading,
+    lastUpdated,
     retry: () => {
+      if (loading) return
+      setLoading(true)
       setError(null)
       setAttempt((value) => value + 1)
     },

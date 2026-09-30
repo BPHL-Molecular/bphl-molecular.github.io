@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon'
 import { researchContent } from '../../data/homeContent'
 import { Link } from 'react-router-dom'
 
@@ -39,7 +40,7 @@ export default function Research() {
               <h3>{title}</h3>
               <p>{description}</p>
               <span className="row-toggle" aria-hidden="true">
-                +
+                <Icon name="plus" />
               </span>
             </summary>
             <div className="research-detail">{detail}</div>
@@ -66,13 +67,13 @@ export default function Research() {
               <h4>{pipeline.name}</h4>
               <p>{pipeline.description}</p>
               <span className="pipeline-link">
-                View on GitHub <span aria-hidden="true">↗</span>
+                View on GitHub <Icon name="arrow-up-right" />
               </span>
             </a>
           ))}
         </div>
         <Link className="text-link pipelines-all" to="/pipelines">
-          All BPHL-Molecular repositories <span aria-hidden="true">↗</span>
+          All BPHL-Molecular repositories <Icon name="arrow-up-right" />
         </Link>
       </div>
     </section>

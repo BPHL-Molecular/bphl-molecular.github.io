@@ -16,6 +16,7 @@ export default function useScrollMorph(story, reducedMotion) {
     let disposed = false
 
     const update = () => {
+      if (document.documentElement.dataset.menuOpen) return
       const y = window.scrollY
       let stage = 0
 
@@ -37,12 +38,14 @@ export default function useScrollMorph(story, reducedMotion) {
     }
 
     const measure = () => {
+      if (document.documentElement.dataset.menuOpen) return
       positions = sections.map((section) => {
         const rect = section.getBoundingClientRect()
         return { start: rect.top + window.scrollY, end: rect.bottom + window.scrollY }
       })
       const headerOffset =
-        parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0
+        (parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0) +
+        (parseFloat(getComputedStyle(hero).scrollMarginTop) || 0)
       const firstChapter = Math.max(positions[0].start + 1, positions[1].start - headerOffset)
       const dnaEnd = positions[0].start + (firstChapter - positions[0].start) * 0.45
       transitions = [{ start: positions[0].start, end: dnaEnd }]
@@ -78,6 +81,7 @@ export default function useScrollMorph(story, reducedMotion) {
     sections.forEach((section) => observer.observe(section))
     window.addEventListener('scroll', scheduleUpdate, { passive: true })
     window.addEventListener('resize', scheduleMeasure)
+    window.addEventListener('bphl-menu-change', scheduleMeasure)
     measure()
     document.fonts.ready.then(scheduleMeasure)
 
@@ -87,6 +91,7 @@ export default function useScrollMorph(story, reducedMotion) {
       observer.disconnect()
       window.removeEventListener('scroll', scheduleUpdate)
       window.removeEventListener('resize', scheduleMeasure)
+      window.removeEventListener('bphl-menu-change', scheduleMeasure)
     }
   }, [story, reducedMotion])
 

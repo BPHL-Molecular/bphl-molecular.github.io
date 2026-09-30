@@ -42,6 +42,10 @@ input:focus-visible {
   outline: 2px solid var(--teal);
   outline-offset: 6px;
 }
+/* Route destinations receive focus for screen readers, but are not controls. */
+:is(h1, h2, main, section)[tabindex='-1']:focus {
+  outline: none;
+}
 ::selection {
   background: #c4ddd4;
 }

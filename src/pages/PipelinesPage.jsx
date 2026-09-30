@@ -1,6 +1,8 @@
+import Icon from '../components/ui/Icon'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import './PipelinesPage.css'
+import RefreshButton from '../components/layout/RefreshButton'
 
 const source = 'https://github.com/BPHL-Molecular'
 
@@ -9,6 +11,14 @@ export default function PipelinesPage() {
   const [query, setQuery] = useState('')
   const [error, setError] = useState('')
   const [attempt, setAttempt] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const refresh = () => {
+    if (loading) return
+    setLoading(true)
+    setError('')
+    setAttempt((value) => value + 1)
+  }
 
   useEffect(() => {
     const controller = new AbortController()
@@ -18,7 +28,7 @@ export default function PipelinesPage() {
       for (let page = 1; ; page++) {
         const response = await fetch(
           `https://api.github.com/orgs/BPHL-Molecular/repos?type=public&sort=updated&direction=desc&per_page=100&page=${page}`,
-          { signal, headers: { Accept: 'application/vnd.github+json' } },
+          { signal, cache: 'no-store', headers: { Accept: 'application/vnd.github+json' } },
         )
         if (!response.ok)
           throw new Error(
@@ -38,7 +48,7 @@ export default function PipelinesPage() {
         )
         if (data.length < 100) break
       }
-      if (!signal.aborted)
+      if (!signal.aborted) {
         setRepositories(
           all.sort(
             (a, b) =>
@@ -46,15 +56,21 @@ export default function PipelinesPage() {
               a.name.localeCompare(b.name),
           ),
         )
+        setLastUpdated(new Date())
+      }
     }
-    load().catch((failure) => {
-      if (!controller.signal.aborted)
-        setError(
-          failure.name === 'TimeoutError'
-            ? 'GitHub took too long to respond. Please try again.'
-            : failure.message,
-        )
-    })
+    load()
+      .catch((failure) => {
+        if (!controller.signal.aborted)
+          setError(
+            failure.name === 'TimeoutError'
+              ? 'GitHub took too long to respond. Please try again.'
+              : failure.message,
+          )
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false)
+      })
     return () => controller.abort()
   }, [attempt])
 
@@ -73,7 +89,7 @@ export default function PipelinesPage() {
       aria-labelledby="pipelines-title"
     >
       <Link className="text-link" to="/#bioinformatics-pipelines">
-        ← Back to homepage pipelines
+        <Icon name="arrow-left" /> Back to homepage pipelines
       </Link>
       <div className="section-heading">
         <h1 id="pipelines-title">
@@ -87,6 +103,19 @@ export default function PipelinesPage() {
             BPHL-Molecular on GitHub
           </a>
           , most recently updated first.
+          <br />
+          <RefreshButton
+            label="Refresh pipelines and repositories"
+            loading={loading}
+            lastUpdated={lastUpdated}
+            onRefresh={refresh}
+          >
+            Synced automatically from{' '}
+            <a href={source} target="_blank" rel="noreferrer">
+              github.com/BPHL-Molecular
+            </a>
+            .
+          </RefreshButton>
         </p>
       </div>
       <div className="training-search">
@@ -109,14 +138,7 @@ export default function PipelinesPage() {
           <a href={source} target="_blank" rel="noreferrer">
             Browse on GitHub
           </a>
-          <button
-            type="button"
-            className="training-retry"
-            onClick={() => {
-              setError('')
-              setAttempt((value) => value + 1)
-            }}
-          >
+          <button type="button" className="training-retry" disabled={loading} onClick={refresh}>
             Try again
           </button>
         </p>
@@ -154,7 +176,9 @@ export default function PipelinesPage() {
                 {repo.fork && <span>Fork</span>}
               </div>
             </div>
-            <span className="pipeline-link">View on GitHub ↗</span>
+            <span className="pipeline-link">
+              View on GitHub <Icon name="arrow-up-right" />
+            </span>
           </a>
         ))}
       </div>

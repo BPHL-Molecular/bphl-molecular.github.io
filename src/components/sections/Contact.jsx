@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon'
 export default function Contact() {
   return (
     <section
@@ -56,7 +57,10 @@ export default function Contact() {
 
       <div className="site-notices">
         <details id="accessibility">
-          <summary>Accessibility</summary>
+          <summary>
+            <Icon name="chevron" />
+            Accessibility
+          </summary>
           <p>
             This site supports keyboard navigation and reduced motion. The scientific visuals are
             decorative, and all information is also available as text.
@@ -64,7 +68,10 @@ export default function Contact() {
         </details>
 
         <details id="privacy">
-          <summary>Privacy</summary>
+          <summary>
+            <Icon name="chevron" />
+            Privacy
+          </summary>
           <p>
             This site does not use contact forms or analytics. Fonts and visual assets are served
             locally.

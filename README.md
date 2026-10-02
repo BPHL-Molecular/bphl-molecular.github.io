@@ -28,4 +28,4 @@ Before pushing, check the site with `npm run lint`, `npm run test:unit`, and `np
 
 The GitHub repository should be named `bphl-molecular.github.io`. In **Settings → Pages**, choose **GitHub Actions** as the source. Pushing to `main` runs the deployment workflow.
 
-The published site will be at [bphl-molecular.github.io](https://bphl-molecular.github.io/). Replace the team placeholders and check the contact details before sharing it.
+The published site will be at [bphl-molecular.github.io](https://bphl-molecular.github.io/).

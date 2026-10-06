@@ -49,7 +49,9 @@ export default function Contact() {
 
             <div>
               <dt>General inquiries</dt>
-              <dd>Bioinformatics tools, development, training, technical support, and collaboration</dd>
+              <dd>
+                Bioinformatics tools, development, training, technical support, and collaboration
+              </dd>
             </div>
           </dl>
         </div>

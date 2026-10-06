@@ -16,7 +16,8 @@ const chapters = [
     copy: (
       <>
         Every pathogen carries genetic information. We use bioinformatics to turn that information
-        into knowledge that supports public health across Florida, and our PHL partners across the country.
+        into knowledge that supports public health across Florida, and our PHL partners across the
+        country.
       </>
     ),
     context: ['The world is connected.', 'So is its data.'],

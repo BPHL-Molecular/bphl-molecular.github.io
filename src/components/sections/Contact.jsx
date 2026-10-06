@@ -44,12 +44,12 @@ export default function Contact() {
 
             <div>
               <dt>Location</dt>
-              <dd>Florida, United States</dd>
+              <dd>Jacksonville, FL USA</dd>
             </div>
 
             <div>
               <dt>General inquiries</dt>
-              <dd>Bioinformatics tools, training, technical support, and collaboration</dd>
+              <dd>Bioinformatics tools, development, training, technical support, and collaboration</dd>
             </div>
           </dl>
         </div>

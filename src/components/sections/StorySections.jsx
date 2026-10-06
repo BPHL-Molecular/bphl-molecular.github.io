@@ -1,6 +1,6 @@
-import Icon from '../ui/Icon'
 import { Link } from 'react-router-dom'
 import { heroTags } from '../../data/homeContent'
+import Icon from '../ui/Icon'
 
 const chapters = [
   {
@@ -16,7 +16,7 @@ const chapters = [
     copy: (
       <>
         Every pathogen carries genetic information. We use bioinformatics to turn that information
-        into knowledge that supports public health across Florida.
+        into knowledge that supports public health across Florida, and our PHL partners across the country.
       </>
     ),
     context: ['The world is connected.', 'So is its data.'],
@@ -33,8 +33,8 @@ const chapters = [
     ),
     copy: (
       <>
-        We use genomic sequencing to identify and compare pathogens, monitor how they change, and
-        support investigations across Florida.
+        We use genomic sequencing to identify and compare pathogens, monitor how they evolve, and
+        support public health investigations and clinical surveillance across Florida.
       </>
     ),
     context: ['A closer look', 'at the pathogens affecting our communities.'],
